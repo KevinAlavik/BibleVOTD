@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 
 #define URL "https://labs.bible.org/api/?passage=votd&type=json"
+#define WIDTH 95
 
 struct MemoryStruct {
     char *memory;
@@ -44,43 +45,48 @@ void extractJsonValue(const char *json, const char *key, char *value, size_t max
 
 void printStyledVerse(const char *book, const char *chapter, const char *verse, const char *text) {
     size_t textLen = strlen(text);
-    size_t borderWidth = textLen + 6;
+    size_t borderWidth = WIDTH;
 
-    printf("\033[1;37m╔");
-    for (size_t i = 0; i < borderWidth; ++i) {
-        printf("═");
+    size_t infoSpaces = 2 + strlen(book) + strlen(chapter) + strlen(verse);
+
+    printf("\033[1;37m╭");
+    for (size_t i = 0; i < borderWidth - 2; ++i) {
+        printf("─");
     }
-    printf("╗\033[0m\n");
+    printf("╮\033[0m\n");
 
-    printf("\033[1;37m║\033[0m");
+    size_t remaining = textLen;
+    const char *current = text;
+    while (remaining > 0) {
+        size_t toPrint = (remaining > (WIDTH - 4)) ? (WIDTH - 4) : remaining;
+        printf("\033[1;37m│\033[0m\033[1;32m ");
+        fwrite(current, 1, toPrint, stdout);
+        for (size_t i = 0; i < WIDTH - 4 - toPrint; ++i) {
+            printf(" ");
+        }
+        printf("\033[0m\033[1;37m │\033[0m\n");
 
-    printf("\033[1;32m ✝ %s ✝\033[0m", text);
+        current += toPrint;
+        remaining -= toPrint;
+    }
 
-    for (size_t i = 0; i < borderWidth - (textLen + 6); ++i) {
+    printf("\033[1;37m│\033[0m\033[1;37m");
+    for (size_t i = 0; i < WIDTH - 2; ++i) {
         printf(" ");
     }
-    printf("\033[1;37m ║\n");
+    printf("\033[1;37m│\033[0m\n");
 
-    printf("\033[1;37m╠");
-    for (size_t i = 0; i < borderWidth; ++i) {
-        printf("═");
-    }
-    printf("╣\033[0m\n");
-
-    printf("\033[1;37m║\033[0m");
-
-    printf("\033[1;33m   %s %s:%s\033[0m", book, chapter, verse);
-
-    for (size_t i = 0; i < borderWidth - (strlen(book) + strlen(chapter) + strlen(verse) + 6); ++i) {
+    printf("\033[1;37m│\033[0m\033[1;37m ✝ %s %s:%s\033[0m", book, chapter, verse);
+    for (size_t i = 0; i < WIDTH - infoSpaces - 5; ++i) {
         printf(" ");
     }
-    printf("\033[1;37m ║\n");
+    printf("\033[1;37m│\033[0m\n");
 
-    printf("\033[1;37m╚");
-    for (size_t i = 0; i < borderWidth; ++i) {
-        printf("═");
+    printf("\033[1;37m╰");
+    for (size_t i = 0; i < borderWidth - 2; ++i) {
+        printf("─");
     }
-    printf("╝\033[0m\n");
+    printf("╯\033[0m\n");
 }
 
 void getVerse() {
@@ -124,6 +130,5 @@ void getVerse() {
 
 int main() {
     getVerse();
-
     return 0;
 }
